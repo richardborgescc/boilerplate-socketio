@@ -51,10 +51,11 @@ mongo.connect(process.env.DATABASE, {useNewUrlParser: true}, (err, client) => {
       console.log('A user has connected');
       
       io.emit('user count', currentUsers);
+      
+      socket.on('disconnect', socket => {
+        currentUsers--;
+        io.emit('user count', currentUsers);
+      });
     });
-    
-  
-
     //end socket.io code
-  
 });
