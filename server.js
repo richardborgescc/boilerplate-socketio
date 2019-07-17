@@ -13,6 +13,7 @@ const app         = express();
 const http        = require('http').Server(app);
 const sessionStore= new session.MemoryStore();
 const io = require('socket.io')(http);
+const passportSocketIo = require('passport.socketio');
 const cors = require('cors');
 app.use(cors());
 
@@ -44,11 +45,18 @@ mongo.connect(process.env.DATABASE, {useNewUrlParser: true}, (err, client) => {
     var currentUsers = 0;
     http.listen(process.env.PORT || 3000);
 
+    io.use(passportSocketIo.authorize({
+      cookieParser: cookieParser,
+      key:          'express.sid',
+      secret:       process.env.SESSION_SECRET,
+      store:        sessionStore
+    }));
   
     //start socket.io code  
     io.on('connection', socket => {
       currentUsers++;
-      console.log('A user has connected');
+      console.log('user ' + socket.request.user.name + ' connected');
+      //console.log('A user has connected');
       
       io.emit('user count', currentUsers);
       
@@ -56,6 +64,7 @@ mongo.connect(process.env.DATABASE, {useNewUrlParser: true}, (err, client) => {
         currentUsers--;
         io.emit('user count', currentUsers);
       });
+      
     });
     //end socket.io code
 });
